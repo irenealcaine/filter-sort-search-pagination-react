@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { MDBTable, MDBTableHead, MDBTableBody, MDBRow, MDBCol, MDBContainer, MDBBtn } from 'mdb-react-ui-kit';
+import { MDBTable, MDBTableHead, MDBTableBody, MDBRow, MDBCol, MDBContainer, MDBBtn, MDBBtnGroup } from 'mdb-react-ui-kit';
 import './App.css';
 
 function App() {
@@ -52,6 +52,14 @@ function App() {
       .catch((err) => console.log(err))
   }
 
+  const handleFilter = async (value) => {
+    return await axios
+      .get(`http://localhost:5000/products?stock=${value}`)
+      .then((response) => {
+        setData(response.data)
+      })
+      .catch((err) => console.log(err))
+  }
 
   return (
     <MDBContainer>
@@ -124,9 +132,16 @@ function App() {
             ))}
           </select>
         </MDBCol>
-        <MDBCol size='4'><h5>Filtrar por disponibilidad</h5></MDBCol>
+        <MDBCol size='4'>
+          <h5>Filtrar por disponibilidad</h5>
+          <MDBBtnGroup>
+            <MDBBtn color='success' onClick={() => handleFilter(true)}>Disponible</MDBBtn>
+            <MDBBtn color='danger' style={{ marginLeft: '2px' }} onClick={() => handleFilter(false)}
+            >No disponible </MDBBtn>
+          </MDBBtnGroup>
+        </MDBCol>
       </MDBRow>
-    </MDBContainer>
+    </MDBContainer >
   );
 }
 
