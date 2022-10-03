@@ -67,11 +67,11 @@ function App() {
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <MDBBtn type='submit' color='dark'>Search</MDBBtn>
-        <MDBBtn className='mx-2' color='info' onClick={() => handleReset()}>Reset</MDBBtn>
+        <MDBBtn type='submit' color='dark'>Buscar</MDBBtn>
+        <MDBBtn className='mx-2' color='info' onClick={() => handleReset()}>Resetear</MDBBtn>
       </form>
       <div style={{ marginTop: "100px" }}>
-        <h2 className='text-center'>Search, filter, sort and pagination using JSON Fake Rest API</h2>
+        <h2 className='text-center'>Catálogo</h2>
         <MDBRow>
           <MDBCol size="12">
             <MDBTable>
