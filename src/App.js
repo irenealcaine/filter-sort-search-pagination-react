@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { MDBTable, MDBTableHead, MDBTableBody, MDBRow, MDBCol, MDBContainer, MDBBtn, MDBBtnGroup } from 'mdb-react-ui-kit';
+import { MDBTable, MDBTableHead, MDBTableBody, MDBRow, MDBCol, MDBContainer, MDBBtn, MDBBtnGroup, MDBPagination, MDBPaginationItem, MDBPaginationLink } from 'mdb-react-ui-kit';
 import './App.css';
 
 function App() {
@@ -8,6 +8,8 @@ function App() {
   const [data, setData] = useState([])
   const [value, setValue] = useState("")
   const [sortValue, setSortValue] = useState("")
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageLimit] = useState(4)
 
   const sortOptions = [{ 'name': 'Nombre', 'value': 'title' },
   { 'name': 'Precio', 'value': 'price' },
@@ -16,13 +18,16 @@ function App() {
   { 'name': 'Categoría', 'value': 'category' }]
 
   useEffect(() => {
-    loadProductsData()
+    loadProductsData(0, 4, 0)
   }, [])
 
-  const loadProductsData = async () => {
+  const loadProductsData = async (start, end, increase) => {
     return await axios
-      .get('http://localhost:5000/products')
-      .then((response) => setData(response.data))
+      .get(`http://localhost:5000/products?_start=${start}&_end=${end}`)
+      .then((response) => {
+        setData(response.data)
+        setCurrentPage(currentPage + increase)
+      })
       .catch((err) => console.log(err))
   }
 
@@ -61,6 +66,55 @@ function App() {
       .catch((err) => console.log(err))
   }
 
+  const renderPagination = () => {
+    if (currentPage === 0) {
+      return (
+        <MDBPagination className='mb-0'>
+          <MDBPaginationItem>
+            <MDBPaginationLink>1</MDBPaginationLink>
+          </MDBPaginationItem>
+          <MDBPaginationItem>
+            <MDBBtn onClick={() => loadProductsData(4, 8, 1)}>
+              Siguiente
+            </MDBBtn>
+          </MDBPaginationItem>
+        </MDBPagination>
+      )
+    } else if (currentPage < pageLimit - 1 && data.length === pageLimit) {
+      return (
+        <MDBPagination className='mb-0'>
+          <MDBPaginationItem>
+            <MDBBtn onClick={() => loadProductsData((currentPage - 1) * 4, currentPage * 4, -1)}>
+              Anterior
+            </MDBBtn>
+          </MDBPaginationItem>
+          <MDBPaginationItem>
+            <MDBPaginationLink>{currentPage + 1}</MDBPaginationLink>
+          </MDBPaginationItem>
+          <MDBPaginationItem>
+            <MDBBtn onClick={() => loadProductsData((currentPage + 1) * 4, (currentPage + 2) * 4, 1)}>
+              Siguiente
+            </MDBBtn>
+          </MDBPaginationItem>
+        </MDBPagination>
+      )
+    } else {
+      return (
+        <MDBPagination className='mb-0'>
+
+          <MDBPaginationItem>
+            <MDBBtn onClick={() => loadProductsData(4, 8, -1)}>
+              Anterior
+            </MDBBtn>
+          </MDBPaginationItem>
+          <MDBPaginationItem>
+            <MDBPaginationLink>{currentPage + 1}</MDBPaginationLink>
+          </MDBPaginationItem>
+        </MDBPagination>
+      )
+    }
+  }
+
   return (
     <MDBContainer>
       <form style={{
@@ -78,7 +132,7 @@ function App() {
         <MDBBtn type='submit' color='dark'>Buscar</MDBBtn>
         <MDBBtn className='mx-2' color='info' onClick={() => handleReset()}>Resetear</MDBBtn>
       </form>
-      <div style={{ marginTop: "100px" }}>
+      <div style={{ marginTop: "20px" }}>
         <h2 className='text-center'>Catálogo</h2>
         <MDBRow>
           <MDBCol size="12">
@@ -118,6 +172,9 @@ function App() {
             </MDBTable>
           </MDBCol>
         </MDBRow>
+        <div style={{
+          margin: "auto", padding: "15px", maxWidth: "400px", alignContent: "center"
+        }}>{renderPagination()}</div>
       </div>
       <MDBRow>
         <MDBCol size='8'>
