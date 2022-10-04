@@ -10,6 +10,8 @@ function App() {
   const [sortValue, setSortValue] = useState("")
   const [currentPage, setCurrentPage] = useState(0)
   const [pageLimit] = useState(4)
+  const [sortFilterValue, setSortFilterValue] = useState('')
+  const [operation, setOperation] = useState('')
 
   const sortOptions = [{ 'name': 'Nombre', 'value': 'title' },
   { 'name': 'Precio', 'value': 'price' },
@@ -21,60 +23,114 @@ function App() {
     loadProductsData(0, 4, 0)
   }, [])
 
-  const loadProductsData = async (start, end, increase) => {
-    return await axios
-      .get(`http://localhost:5000/products?_start=${start}&_end=${end}`)
-      .then((response) => {
-        setData(response.data)
-        setCurrentPage(currentPage + increase)
-      })
-      .catch((err) => console.log(err))
+  const loadProductsData = async (start, end, increase, optType = null, filterOrSortValue) => {
+    switch (optType) {
+      case "search":
+        setOperation(optType)
+        setSortValue('')
+        return await axios
+          .get(`http://localhost:5000/products?q=${value}&_start=${start}&_end=${end}`)
+          .then((response) => {
+            setData(response.data)
+            setCurrentPage(currentPage + increase)
+          })
+          .catch((err) => console.log(err))
+
+      case "sort":
+        setOperation(optType)
+        setSortFilterValue(filterOrSortValue)
+        return await axios
+          .get(`http://localhost:5000/products?_sort=${filterOrSortValue}&_order=${filterOrSortValue === 'title' || filterOrSortValue === 'price' || filterOrSortValue === 'category' ? 'asc' : 'desc'}&_start=${start}&_end=${end}`)
+          .then((response) => {
+            setData(response.data)
+            setCurrentPage(currentPage + increase)
+          })
+          .catch((err) => console.log(err))
+
+      case "filter":
+        setOperation(optType)
+        setSortFilterValue(filterOrSortValue)
+        return await axios
+          .get(`http://localhost:5000/products?stock=${filterOrSortValue}&_order=${filterOrSortValue === 'title' || filterOrSortValue === 'price' || filterOrSortValue === 'category' ? 'asc' : 'desc'}&_start=${start}&_end=${end}`)
+          .then((response) => {
+            setData(response.data)
+            setCurrentPage(currentPage + increase)
+          })
+          .catch((err) => console.log(err))
+
+      default:
+        return await axios
+          .get(`http://localhost:5000/products?_start=${start}&_end=${end}`)
+          .then((response) => {
+            setData(response.data)
+            setCurrentPage(currentPage + increase)
+          })
+          .catch((err) => console.log(err))
+    }
+
   }
+  //   return await axios
+  //     .get(`http://localhost:5000/products?_start=${start}&_end=${end}`)
+  //     .then((response) => {
+  //       setData(response.data)
+  //       setCurrentPage(currentPage + increase)
+  //     })
+  //     .catch((err) => console.log(err))
+  // }
 
   const handleReset = () => {
-    loadProductsData()
+    setOperation('')
+    setValue('')
+    setSortFilterValue('')
+    setSortValue('')
+    loadProductsData(0, 4, 0)
+    setCurrentPage(0)
   }
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    return await axios
-      .get(`http://localhost:5000/products?q=${value}`)
-      .then((response) => {
-        setData(response.data)
-        setValue('')
-      })
-      .catch((err) => console.log(err))
+    loadProductsData(0, 4, 0, 'search')
+    // return await axios
+    //   .get(`http://localhost:5000/products?q=${value}`)
+    //   .then((response) => {
+    //     setData(response.data)
+    //     setValue('')
+    //   })
+    //   .catch((err) => console.log(err))
   }
 
   const handleSort = async (e) => {
     let value = e.target.value
     setSortValue(value)
-    return await axios
-      .get(`http://localhost:5000/products?_sort=${value}&_order=${value === 'title' || value === 'price' || value === 'category' ? 'asc' : 'desc'}`)
-      .then((response) => {
-        setData(response.data)
-      })
-      .catch((err) => console.log(err))
+    loadProductsData(0, 4, 0, "sort", value)
+    // return await axios
+    //   .get(`http://localhost:5000/products?_sort=${value}&_order=${value === 'title' || value === 'price' || value === 'category' ? 'asc' : 'desc'}`)
+    //   .then((response) => {
+    //     setData(response.data)
+    //   })
+    //   .catch((err) => console.log(err))
   }
 
   const handleFilter = async (value) => {
-    return await axios
-      .get(`http://localhost:5000/products?stock=${value}`)
-      .then((response) => {
-        setData(response.data)
-      })
-      .catch((err) => console.log(err))
+    loadProductsData(0, 4, 0, 'filter', value)
+    // return await axios
+    //   .get(`http://localhost:5000/products?stock=${value}`)
+    //   .then((response) => {
+    //     setData(response.data)
+    //   })
+    //   .catch((err) => console.log(err))
   }
 
   const renderPagination = () => {
+    if (data.length < 4 && currentPage === 0) return null
     if (currentPage === 0) {
       return (
         <MDBPagination className='mb-0'>
           <MDBPaginationItem>
-            <MDBPaginationLink>1</MDBPaginationLink>
+            <MDBPaginationLink>{currentPage + 1}</MDBPaginationLink>
           </MDBPaginationItem>
           <MDBPaginationItem>
-            <MDBBtn onClick={() => loadProductsData(4, 8, 1)}>
+            <MDBBtn onClick={() => loadProductsData((currentPage + 1) * 4, (currentPage + 2) * 4, 1, operation, sortFilterValue)}>
               Siguiente
             </MDBBtn>
           </MDBPaginationItem>
@@ -84,15 +140,17 @@ function App() {
       return (
         <MDBPagination className='mb-0'>
           <MDBPaginationItem>
-            <MDBBtn onClick={() => loadProductsData((currentPage - 1) * 4, currentPage * 4, -1)}>
+            <MDBBtn onClick={() => loadProductsData((currentPage - 1) * 4, currentPage * 4, -1, operation, sortFilterValue)}>
               Anterior
             </MDBBtn>
           </MDBPaginationItem>
+
           <MDBPaginationItem>
             <MDBPaginationLink>{currentPage + 1}</MDBPaginationLink>
           </MDBPaginationItem>
+
           <MDBPaginationItem>
-            <MDBBtn onClick={() => loadProductsData((currentPage + 1) * 4, (currentPage + 2) * 4, 1)}>
+            <MDBBtn onClick={() => loadProductsData((currentPage + 1) * 4, (currentPage + 2) * 4, 1, operation, sortFilterValue)}>
               Siguiente
             </MDBBtn>
           </MDBPaginationItem>
@@ -103,10 +161,11 @@ function App() {
         <MDBPagination className='mb-0'>
 
           <MDBPaginationItem>
-            <MDBBtn onClick={() => loadProductsData(4, 8, -1)}>
+            <MDBBtn onClick={() => loadProductsData((currentPage - 1) * 4, currentPage * 4, -1, operation, sortFilterValue)}>
               Anterior
             </MDBBtn>
           </MDBPaginationItem>
+
           <MDBPaginationItem>
             <MDBPaginationLink>{currentPage + 1}</MDBPaginationLink>
           </MDBPaginationItem>
@@ -151,7 +210,7 @@ function App() {
               {data.length === 0 ? (
                 <MDBTableBody className='align-center mb-0'>
                   <tr>
-                    <td colSpan={8} className='text-center mb-0'>No data found</td>
+                    <td colSpan={8} className='text-center mb-0'>Sin datos</td>
                   </tr>
                 </MDBTableBody>
               ) : (
@@ -176,28 +235,31 @@ function App() {
           margin: "auto", padding: "15px", maxWidth: "400px", alignContent: "center"
         }}>{renderPagination()}</div>
       </div>
-      <MDBRow>
-        <MDBCol size='8'>
-          <h5>Ordenar por:</h5>
-          <select style={{ width: "50%", borderRadius: "2px", height: "35px" }}
-            onChange={handleSort}
-            value={sortValue}
-          >
-            <option>Select value</option>
-            {sortOptions.map((item, index) => (
-              <option value={item.value} key={index}>{item.name}</option>
-            ))}
-          </select>
-        </MDBCol>
-        <MDBCol size='4'>
-          <h5>Filtrar por disponibilidad</h5>
-          <MDBBtnGroup>
-            <MDBBtn color='success' onClick={() => handleFilter(true)}>Disponible</MDBBtn>
-            <MDBBtn color='danger' style={{ marginLeft: '2px' }} onClick={() => handleFilter(false)}
-            >No disponible </MDBBtn>
-          </MDBBtnGroup>
-        </MDBCol>
-      </MDBRow>
+      {data.length > 0 && (
+        <MDBRow>
+          <MDBCol size='8'>
+            <h5>Ordenar por:</h5>
+            <select style={{ width: "50%", borderRadius: "2px", height: "35px" }}
+              onChange={handleSort}
+              value={sortValue}
+            >
+              <option>Seleccionar</option>
+              {sortOptions.map((item, index) => (
+                <option value={item.value} key={index}>{item.name}</option>
+              ))}
+            </select>
+          </MDBCol>
+          <MDBCol size='4'>
+            <h5>Filtrar por disponibilidad</h5>
+            <MDBBtnGroup>
+              <MDBBtn color='success' onClick={() => handleFilter(true)}>Disponible</MDBBtn>
+              <MDBBtn color='danger' style={{ marginLeft: '2px' }} onClick={() => handleFilter(false)}
+              >No disponible </MDBBtn>
+            </MDBBtnGroup>
+          </MDBCol>
+        </MDBRow>
+      )}
+
     </MDBContainer >
   );
 }
