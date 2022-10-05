@@ -69,14 +69,7 @@ function App() {
     }
 
   }
-  //   return await axios
-  //     .get(`http://localhost:5000/products?_start=${start}&_end=${end}`)
-  //     .then((response) => {
-  //       setData(response.data)
-  //       setCurrentPage(currentPage + increase)
-  //     })
-  //     .catch((err) => console.log(err))
-  // }
+
 
   const handleReset = () => {
     setOperation('')
@@ -90,35 +83,19 @@ function App() {
   const handleSearch = async (e) => {
     e.preventDefault();
     loadProductsData(0, 4, 0, 'search')
-    // return await axios
-    //   .get(`http://localhost:5000/products?q=${value}`)
-    //   .then((response) => {
-    //     setData(response.data)
-    //     setValue('')
-    //   })
-    //   .catch((err) => console.log(err))
+
   }
 
   const handleSort = async (e) => {
     let value = e.target.value
     setSortValue(value)
     loadProductsData(0, 4, 0, "sort", value)
-    // return await axios
-    //   .get(`http://localhost:5000/products?_sort=${value}&_order=${value === 'title' || value === 'price' || value === 'category' ? 'asc' : 'desc'}`)
-    //   .then((response) => {
-    //     setData(response.data)
-    //   })
-    //   .catch((err) => console.log(err))
+
   }
 
   const handleFilter = async (value) => {
     loadProductsData(0, 4, 0, 'filter', value)
-    // return await axios
-    //   .get(`http://localhost:5000/products?stock=${value}`)
-    //   .then((response) => {
-    //     setData(response.data)
-    //   })
-    //   .catch((err) => console.log(err))
+
   }
 
   const renderPagination = () => {
@@ -192,7 +169,26 @@ function App() {
         <MDBBtn className='mx-2' color='info' onClick={() => handleReset()}>Resetear</MDBBtn>
       </form>
       <div style={{ marginTop: "20px" }}>
-        <h2 className='text-center'>Catálogo</h2>
+        {data.length > 0 && (
+          <div>
+            <MDBCol size='8'>
+              <h5>Ordenar por:</h5>
+              <select style={{ width: "50%", borderRadius: "2px", height: "35px" }}
+                onChange={handleSort}
+                value={sortValue}
+              >
+                <option>Seleccionar</option>
+                {sortOptions.map((item, index) => (
+                  <option value={item.value} key={index}>{item.name}</option>
+                ))}
+              </select>
+            </MDBCol>
+            <MDBCol size='4' style={{ marginTop: "20px" }}>
+              <MDBBtn color='success' onClick={() => handleFilter(true)}>Ocultar artículos no disponibles</MDBBtn>
+            </MDBCol>
+          </div>
+        )}
+        <h2 className='text-center' style={{ marginTop: "20px" }}>Catálogo</h2>
         <MDBRow>
           <MDBCol size="12">
             <MDBTable>
@@ -235,7 +231,7 @@ function App() {
           margin: "auto", padding: "15px", maxWidth: "400px", alignContent: "center"
         }}>{renderPagination()}</div>
       </div>
-      {data.length > 0 && (
+      {/* {data.length > 0 && (
         <MDBRow>
           <MDBCol size='8'>
             <h5>Ordenar por:</h5>
@@ -258,7 +254,7 @@ function App() {
             </MDBBtnGroup>
           </MDBCol>
         </MDBRow>
-      )}
+      )} */}
 
     </MDBContainer >
   );
